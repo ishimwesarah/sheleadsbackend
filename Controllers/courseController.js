@@ -53,3 +53,21 @@ export const deleteCourse = async (req, res) => {
     res.status(500).json({ message: "Error deleting course", error });
   }
 };
+export const uploadCourseImage = async (req, res) => {
+  try {
+    const { title, description, instructor, duration } = req.body;
+
+    const newCourse = new Course({
+      title,
+      description,
+      instructor,
+      duration,
+      image: req.file.path, // Cloudinary URL
+    });
+
+    await newCourse.save();
+    res.status(201).json(newCourse);
+  } catch (error) {
+    res.status(500).json({ message: "Error adding course", error });
+  }
+};

@@ -1,10 +1,11 @@
 import express from "express";
 import { createPost, getPosts, getPostById, deletePost } from "../Controllers/communityController.js";
+import { authenticateToken } from "../middleware/authemiddleware.js";
 
 const communityrouter = express.Router();
 
 // Create a new community post
-communityrouter.post("/Createpost", createPost);
+communityrouter.post("/Createpost", authenticateToken, createPost);
 
 // Get all community posts
 communityrouter.get("/getpost", getPosts);

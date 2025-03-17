@@ -1,9 +1,22 @@
 import CommunityPost from "../model/community.js";
+import User from "../model/user.js";
 
 // Create a new community post
 export const createPost = async (req, res) => {
   try {
-    const newPost = new CommunityPost(req.body);
+    const { content } = req.body;
+    const user = await User.findById(req.user.id); // Get user from DB
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const newPost = new CommunityPost({
+      userId: user._id,
+      userName: user.name,
+      content,
+    });
+
     await newPost.save();
     res.status(201).json(newPost);
   } catch (error) {
@@ -11,16 +24,15 @@ export const createPost = async (req, res) => {
   }
 };
 
-// Get all community posts
+// Fetch all posts
 export const getPosts = async (req, res) => {
   try {
-    const posts = await CommunityPost.find().sort({ createdAt: -1 });
+    const posts = await CommunityPost.find().populate("userId", "name email"); // Populate user details
     res.status(200).json(posts);
   } catch (error) {
     res.status(500).json({ message: "Error fetching posts", error });
   }
 };
-
 // Get a single post by ID
 export const getPostById = async (req, res) => {
   try {
