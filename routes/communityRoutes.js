@@ -1,5 +1,5 @@
 import express from "express";
-import { createPost, getPosts, getPostById, deletePost } from "../Controllers/communityController.js";
+import { createPost, getPosts, getPostById, deletePost, likePost, replyPost  } from "../Controllers/communityController.js";
 import { authenticateToken } from "../middleware/authemiddleware.js";
 
 const communityrouter = express.Router();
@@ -15,5 +15,6 @@ communityrouter.get("/getpost/:id", getPostById);
 
 // Delete a post
 communityrouter.delete("/delete/:id", deletePost);
-
+communityrouter.put("/like/:id", authenticateToken, likePost); // <== New Route
+communityrouter.post("/reply/:id", authenticateToken, replyPost);
 export default communityrouter;
