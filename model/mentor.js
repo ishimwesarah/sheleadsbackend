@@ -6,7 +6,9 @@ const MentorSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     expertise: { type: String, required: true },
     bio: { type: String },
-    availability: { type: Boolean, default: true },
+    availability: { type: Boolean, default: true }, // Available or not
+    availableDays: [{ type: String }], // ["Monday", "Wednesday"]
+    availableTime: { type: String }, // "10:00 AM - 3:00 PM"
     profilePic: { type: String, default: "" }, // Cloudinary URL
   },
   { timestamps: true }

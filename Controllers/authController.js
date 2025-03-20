@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../model/user.js";
+import cloudinary from "../config/cloudinary.js";
 
 
 
@@ -61,6 +62,26 @@ export const getUsers = async (req, res) => {
     res.status(500).json({ message: "Error fetching users", error });
   }
 };
+export const getUserById = async (req, res) => {
+  try {
+    const userId = req.params.id; // Get user ID from request params
+    const user = await User.findById(userId).select("-password"); // Exclude password
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      name: user.name,
+      email: user.email,
+      profilePic: user.profilePic || "https://res.cloudinary.com/ddfhybgob/image/upload/v1742391970/pr_fdqujg.avif",
+      userRole: user.userRole,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching user", error });
+  }
+};
+
 export const deleteUser = async (req, res) => {
   try {
     const userIdToDelete = req.params.id;
@@ -91,10 +112,22 @@ export const uploadProfilePic = async (req, res) => {
 
     if (!req.file) return res.status(400).json({ message: "No file uploaded" });
 
-    user.profilePic = req.file.path; // Save Cloudinary URL
+    // ✅ Delete previous profile picture from Cloudinary (if not default)
+    if (user.profilePic && !user.profilePic.includes("default-profile.jpg")) {
+      const publicId = user.profilePic.split("/").pop().split(".")[0]; // Extract Cloudinary public ID
+      await cloudinary.uploader.destroy(`ProfilePictures/${publicId}`);
+    }
+
+    // ✅ Upload new image to Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "ProfilePictures",
+      public_id: `user_${user._id}`, // ✅ Save image using user ID
+    });
+
+    user.profilePic = result.secure_url; // ✅ Save Cloudinary URL
     await user.save();
 
-    res.status(200).json({ message: "Profile picture updated", user });
+    res.status(200).json({ message: "Profile picture updated", profilePic: user.profilePic });
   } catch (error) {
     res.status(500).json({ message: "Error uploading profile picture", error });
   }

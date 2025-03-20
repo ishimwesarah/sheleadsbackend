@@ -5,7 +5,7 @@ const UserSchema = new mongoose.Schema(
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    profilePic: { type: String, default: "" }, // Cloudinary URL
+    profilePic: { type: String, default: "https://res.cloudinary.com/ddfhybgob/image/upload/v1742391970/pr_fdqujg.avif" }, // Cloudinary URL
     userRole: { type: String, default: "user", enum: ["user", "admin"] },
   },
   { timestamps: true }
