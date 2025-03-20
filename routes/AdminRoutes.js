@@ -1,5 +1,5 @@
 import express from "express";
-import { getAdminDetails, updateAdminProfile, changeAdminPassword, updateSettings } from "../controllers/adminController.js";
+import { getAdminDetails, updateAdminProfile, changeAdminPassword, updateSettings } from "../Controllers/AdminController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
 const adminrouter = express.Router();
