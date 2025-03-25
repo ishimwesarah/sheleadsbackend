@@ -10,12 +10,7 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
-app.use(cors( 
-  {
-    origin: "https://sheleads-git-main-ishimwesarahs-projects.vercel.app/", // Change this to your deployed frontend
-    credentials: true,
-  }
-));
+app.use(cors( ));
 app.use(helmet());
 app.use('/', mainRouter);
 app.use('/', emailrouter); 
