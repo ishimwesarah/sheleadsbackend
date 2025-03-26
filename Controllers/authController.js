@@ -3,7 +3,11 @@ import jwt from "jsonwebtoken";
 import User from "../model/user.js";
 import cloudinary from "../config/cloudinary.js";
 
+import multer from "multer";
 
+// ✅ Set up Multer storage (optional, Cloudinary handles storage)
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 export const register = async (req, res) => {
   try {
@@ -107,28 +111,40 @@ export const deleteUser = async (req, res) => {
 // ✅ Upload Profile Picture
 export const uploadProfilePic = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    console.log("Received upload request..."); // ✅ Log request start
+    console.log("Request User:", req.user); // ✅ Check if user is available
 
-    if (!req.file) return res.status(400).json({ message: "No file uploaded" });
-
-    // ✅ Delete previous profile picture from Cloudinary (if not default)
-    if (user.profilePic && !user.profilePic.includes("default-profile.jpg")) {
-      const publicId = user.profilePic.split("/").pop().split(".")[0]; // Extract Cloudinary public ID
-      await cloudinary.uploader.destroy(`ProfilePictures/${publicId}`);
+    if (!req.user || !req.user.id) { // ✅ Prevent `Cannot read properties of null`
+      console.error("Authentication failed: No user found in request");
+      return res.status(401).json({ message: "Unauthorized: No user found" });
     }
 
-    // ✅ Upload new image to Cloudinary
+    if (!req.file) {
+      console.error("No file uploaded");
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    console.log("Uploading to Cloudinary...");
     const result = await cloudinary.uploader.upload(req.file.path, {
       folder: "ProfilePictures",
-      public_id: `user_${user._id}`, // ✅ Save image using user ID
+      public_id: `user_${req.user.id}`,
     });
 
-    user.profilePic = result.secure_url; // ✅ Save Cloudinary URL
+    console.log("Cloudinary Upload Successful:", result);
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      console.error("User not found");
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.profilePic = result.secure_url;
     await user.save();
 
     res.status(200).json({ message: "Profile picture updated", profilePic: user.profilePic });
   } catch (error) {
-    res.status(500).json({ message: "Error uploading profile picture", error });
+    console.error("Error uploading profile picture:", error);
+    res.status(500).json({ message: "Error uploading profile picture", error: error.message });
   }
 };
+

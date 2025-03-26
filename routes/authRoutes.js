@@ -2,6 +2,8 @@ import express from "express";
 import { register, login, getUsers,deleteUser, uploadProfilePic, getUserById } from "../Controllers/authController.js";
 import upload from "../middleware/uploadMiddleware.js";
 import { protect } from "../middleware/authMiddleware.js";
+import multer from "multer";
+
 
 const authrouter = express.Router();
 
