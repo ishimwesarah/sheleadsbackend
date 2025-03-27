@@ -4,6 +4,7 @@ import communityrouter from "./communityRoutes.js";
 import authrouter from "./authRoutes.js";
 import mentorrouter from "./mentorRoute.js";
 import adminrouter from "./AdminRoutes.js";
+import blogrouter from "./blogRoutes.js";
 
 
 const mainRouter=express.Router();
@@ -12,5 +13,7 @@ mainRouter.use("/community", communityrouter)
 mainRouter.use("/mentor", mentorrouter)
 mainRouter.use("/Admin", adminrouter)
 mainRouter.use("/course", router)
+mainRouter.use("/Blog", blogrouter)
+
 
 export default mainRouter;
