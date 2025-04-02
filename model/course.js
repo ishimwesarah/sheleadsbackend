@@ -7,6 +7,7 @@ const CourseSchema = new mongoose.Schema(
     instructor: { type: String, required: true },
     duration: { type: String, required: true },
     image: { type: String }, // Cloudinary URL
+    
   },
   { timestamps: true }
 );

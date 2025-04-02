@@ -89,23 +89,33 @@ export const getUserById = async (req, res) => {
 export const deleteUser = async (req, res) => {
   try {
     const userIdToDelete = req.params.id;
-    const loggedInUser = req.user.id; // The ID of the logged-in user from the token
 
-    // Check if the logged-in user has admin privileges or is trying to delete their own account
-    if (req.user.role !== 'admin' && loggedInUser !== userIdToDelete) {
-      return res.status(403).json({ message: "Unauthorized to delete this user" });
+    // Ensure req.user exists
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized: No user logged in" });
     }
 
-    const user = await User.findByIdAndDelete(userIdToDelete);
+    // Ensure only admin can delete users
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Access denied. Only admins can delete users." });
+    }
+
+    // Find the user to delete
+    const user = await User.findById(userIdToDelete);
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ error: "User not found" });
     }
 
+    // Delete user
+    await User.findByIdAndDelete(userIdToDelete);
     res.status(200).json({ message: "User deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Error deleting user", error });
+    console.error("Error deleting user:", error);
+    res.status(500).json({ message: "Error deleting user", error: error.message });
   }
 };
+
+
 
 
 // ✅ Upload Profile Picture
@@ -145,6 +155,28 @@ export const uploadProfilePic = async (req, res) => {
   } catch (error) {
     console.error("Error uploading profile picture:", error);
     res.status(500).json({ message: "Error uploading profile picture", error: error.message });
+  }
+};
+// Update User Role
+export const updateUserRole = async (req, res) => {
+  try {
+    const userId = req.params.id; // Get user ID from request params
+    const { userRole } = req.body; // The new role
+
+    // Find the user to update
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update the user's role
+    user.userRole = userRole;
+    await user.save();
+
+    res.status(200).json({ message: "User role updated successfully", user });
+  } catch (error) {
+    console.error("Error updating user role:", error);
+    res.status(500).json({ message: "Error updating user role", error });
   }
 };
 
