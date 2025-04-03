@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../model/user.js";
 import cloudinary from "../config/cloudinary.js";
+import mongoose from "mongoose";
 
 import multer from "multer";
 
@@ -91,14 +92,7 @@ export const deleteUser = async (req, res) => {
     const userIdToDelete = req.params.id;
 
     // Ensure req.user exists
-    if (!req.user) {
-      return res.status(401).json({ message: "Unauthorized: No user logged in" });
-    }
-
-    // Ensure only admin can delete users
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Access denied. Only admins can delete users." });
-    }
+    
 
     // Find the user to delete
     const user = await User.findById(userIdToDelete);
@@ -160,23 +154,52 @@ export const uploadProfilePic = async (req, res) => {
 // Update User Role
 export const updateUserRole = async (req, res) => {
   try {
-    const userId = req.params.id; // Get user ID from request params
-    const { userRole } = req.body; // The new role
+    const { role } = req.body; // Get new role from request body
+    const { id } = req.params; // Get user ID from URL params
 
-    // Find the user to update
-    const user = await User.findById(userId);
+    // Check if user exists
+    const user = await User.findById(id);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
     // Update the user's role
-    user.userRole = userRole;
+    user.role = role;
     await user.save();
 
-    res.status(200).json({ message: "User role updated successfully", user });
+    // ✅ If role is 'mentor', move user to Mentor collection
+    if (role === "mentor") {
+      const existingMentor = await Mentor.findOne({ email: user.email });
+      if (!existingMentor) {
+        await Mentor.create({
+          name: user.name,
+          email: user.email,
+          expertise: "", // You might need to add a field for expertise
+          bio: "",
+          availability: true,
+          availableDays: [],
+          availableTime: "",
+          profilePic: user.profilePic || "",
+        });
+      }
+    }
+
+    // ✅ If role is 'admin', move user to Admin collection
+    if (role === "admin") {
+      const existingAdmin = await Admin.findOne({ email: user.email });
+      if (!existingAdmin) {
+        await Admin.create({
+          name: user.name,
+          email: user.email,
+        });
+      }
+    }
+
+    return res.status(200).json({
+      message: `User role updated to ${role} successfully`,
+      user,
+    });
   } catch (error) {
-    console.error("Error updating user role:", error);
-    res.status(500).json({ message: "Error updating user role", error });
+    res.status(500).json({ message: "Error updating role", error });
   }
 };
-

@@ -1,22 +1,23 @@
 import Course from "../model/course.js";
 
-// Create a new course
-
-
-// Create a new course with PDF and YouTube URL
+/** ✅ CREATE A NEW COURSE */
 export const createCourse = async (req, res) => {
   try {
     const { title, description, instructor, duration, pdfUrl, videoUrl } = req.body;
 
-    // Create a new course with the provided data
+    // Extract uploaded files if they exist
+    const image = req.files?.image ? req.files.image[0].path : "";
+    const pdf = req.files?.pdf ? req.files.pdf[0].path : "";
+    const video = req.files?.video ? req.files.video[0].path : "";
+
     const newCourse = new Course({
       title,
       description,
       instructor,
       duration,
-      pdfUrl,      // PDF URL passed in the body
-      videoUrl,    // YouTube URL passed in the body
-      image: req.file?.path || "", // Cloudinary URL for image (if any)
+      image,   // Cloudinary Image URL
+      pdf: pdf || pdfUrl,  // Use uploaded file or provided URL
+      video: video || videoUrl,  // Use uploaded file or YouTube URL
     });
 
     await newCourse.save();
@@ -26,17 +27,26 @@ export const createCourse = async (req, res) => {
   }
 };
 
-// Update a course with PDF and YouTube URL
+/** ✅ UPDATE A COURSE */
 export const updateCourse = async (req, res) => {
   try {
-    const { pdfUrl, videoUrl } = req.body; // Get the PDF and video URL from the request body
+    const { title, description, instructor, duration, pdfUrl, videoUrl } = req.body;
+
+    // Extract new file uploads
+    const image = req.files?.image ? req.files.image[0].path : undefined;
+    const pdf = req.files?.pdf ? req.files.pdf[0].path : undefined;
+    const video = req.files?.video ? req.files.video[0].path : undefined;
 
     const updatedCourse = await Course.findByIdAndUpdate(
       req.params.id,
       {
-        ...req.body,
-        pdfUrl,  // Update PDF URL
-        videoUrl, // Update YouTube URL
+        title,
+        description,
+        instructor,
+        duration,
+        ...(image && { image }),   // Update if new file is uploaded
+        pdf: pdf || pdfUrl,        // Keep existing if no new upload
+        video: video || videoUrl,  // Keep existing if no new upload
       },
       { new: true }
     );
@@ -49,10 +59,7 @@ export const updateCourse = async (req, res) => {
   }
 };
 
-// Existing functions for get, delete, etc.
-
-
-// Get all courses
+/** ✅ GET ALL COURSES */
 export const getCourses = async (req, res) => {
   try {
     const courses = await Course.find();
@@ -62,7 +69,7 @@ export const getCourses = async (req, res) => {
   }
 };
 
-// Get a single course by ID
+/** ✅ GET A SINGLE COURSE BY ID */
 export const getCourseById = async (req, res) => {
   try {
     const course = await Course.findById(req.params.id);
@@ -73,10 +80,7 @@ export const getCourseById = async (req, res) => {
   }
 };
 
-// Update a course
-
-
-// Delete a course
+/** ✅ DELETE A COURSE */
 export const deleteCourse = async (req, res) => {
   try {
     const deletedCourse = await Course.findByIdAndDelete(req.params.id);
@@ -84,23 +88,5 @@ export const deleteCourse = async (req, res) => {
     res.status(200).json({ message: "Course deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error deleting course", error });
-  }
-};
-export const uploadCourseImage = async (req, res) => {
-  try {
-    const { title, description, instructor, duration } = req.body;
-
-    const newCourse = new Course({
-      title,
-      description,
-      instructor,
-      duration,
-      image: req.file.path, // Cloudinary URL
-    });
-
-    await newCourse.save();
-    res.status(201).json(newCourse);
-  } catch (error) {
-    res.status(500).json({ message: "Error adding course", error });
   }
 };
